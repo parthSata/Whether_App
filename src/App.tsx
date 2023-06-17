@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import './App.css';
 import rectangleImg from './assets/img/Rectangle 2.jpg'
 import MemoCloudIcon from './assets/icon/CloudIcon';
@@ -6,9 +6,50 @@ import MemoSunIcon from './assets/icon/SunIcon';
 import MemoRainIcon from './assets/icon/RainIcon';
 import Biarritz from './assets/icon/Location.png'
 import Sun from './assets/img/Sun.png'
+import Select from 'react-select'
+import { debounce } from 'lodash';
+
+const apiKey = '388d0661a1ff42b3ad9144354230906';
+
+interface SearchResult {
+  // Define the structure of your search result object
+  id: string;
+  name: string;
+  // Add more properties as needed
+}
 
 function App() {
-  const [modalVisible ,setModalVisible] = useState(false)
+  const [modalVisible, setModalVisible] = useState(false)
+  // const [Whether, setWhether] = useState({})
+
+  const [Wether, setWether] = useState({})
+  const [searchTerm, setSearchTerm] = useState("")
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+
+  // const SubmitePressed = async () => {
+  //   console.log('search', search);
+  //   let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=paddhari`;
+  //   let response = await fetch(url);
+  //   let data = await response.json();
+  //   console.log('resilts pagination', data);
+  //   setWether({
+  //     data
+  //   })
+  // }
+
+  const handelOnchange = async() => {
+    let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=paddhari`;
+    // setwether({ loading: true });
+    let response = await fetch(url);
+    let data = await response.json();
+    console.log('resilts', data);
+
+    setWether({
+      articles: data.articles,
+   
+    });
+  }
+
 
   const modalOpen = () => {
    setModalVisible(true)
@@ -18,6 +59,46 @@ function App() {
     setModalVisible(false)
   }
 
+  const [isClearable, setIsClearable] = useState(true);
+  const [isSearchable, setIsSearchable] = useState(true);
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRtl, setIsRtl] = useState(false);
+
+  const colourOptions = [
+    { value: 'ocean', label: 'Ocean'},
+    { value: 'blue', label: 'Blue' },
+    { value: 'purple', label: 'Purple' },
+    { value: 'red', label: 'Red'},
+    { value: 'orange', label: 'Orange' },
+    { value: 'yellow', label: 'Yellow' },
+    { value: 'green', label: 'Green' },
+    { value: 'forest', label: 'Forest' },
+    { value: 'slate', label: 'Slate' },
+    { value: 'silver', label: 'Silver' },
+  ];
+
+  const performSearch = async (query: string) => {
+    // Perform your API request here and update the searchResults state
+    // You can use any HTTP library or fetch to make the request
+    // For simplicity, let's assume a mock API call that returns search results
+    const response = await fetch(`http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${query}`);
+    const data = await response.json();
+    setSearchResults(data);
+    // console.log('data',data);
+  };
+
+  // Wrap the performSearch function with debounce to create a debounced version
+  const debouncedSearch = debounce(performSearch, 300);
+
+
+  const handleInputChange = (value: any) => {
+    // console.log('val',value);
+    setSearchTerm(value);
+
+    // Call the debounced search function after the user stops typing for 300ms
+    debouncedSearch(value);
+  };
 
   return (
     <div className="flex justify-center items-center bg-gray-700 w-[100vw] h-[100vh]">
@@ -95,18 +176,30 @@ function App() {
             {modalVisible && 
               <div className="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
                 <div className="fixed inset-0 z-10 overflow-y-auto bg-black bg-opacity-80 backdrop-blur-sm">
-                  <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                  <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0 bg">
 
-                    <div className="relative transform overflow-hidden rounded-lg bg-blue-400 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <div className="relative transform rounded-lg bg-blue-400 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
                       <div className="bg-blue-300 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                         <div className="sm:flex sm:items-start">
                           <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                             </svg>
                           </div>
                           <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                            <h3 className="text-base font-semibold leading-6 text-gray-900" id="modal-title"><input type="text" name="" id="" /></h3>
+                            <h3 className='mb-2 font-semibold'>Enter the Location Here !!</h3>
+                            {/* <h3 className="text-base font-semibold leading-6 text-gray-900" id="modal-title"><input type="text" name="" id="" /></h3> */}
+                            <Select
+                              className="basic-single"
+                              classNamePrefix="select"
+                              isDisabled={isDisabled}
+                              isLoading={isLoading}
+                              isClearable={isClearable}
+                              isRtl={isRtl}
+                              isSearchable={isSearchable}
+                              name="value"
+                              onInputChange={(val: any) => handleInputChange(val)}
+                            />
                             <div className="mt-2">
                               <p className="text-sm text-gray-500">Are you sure you want to deactivate your account? All of your data will be permanently removed. This action cannot be undone.</p>
                             </div>
@@ -114,7 +207,7 @@ function App() {
                         </div>
                       </div>
                       <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                        <button type="button" className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto" onClick={modalOpen}>Submit</button>
+                        <button type="button" className="bg-[blue] border-1   ==inline-flex w-full justify-center rounded-md  px-3 py-2 text-sm font-semibold text-black shadow-xl  sm:ml-3 sm:w-auto" onClick={handelOnchange}>Submit</button>
                         <button type="button" className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" onClick={modalClose}>Cancel</button>
                       </div>
                     </div>

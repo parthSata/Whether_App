@@ -13,8 +13,8 @@ const apiKey = '388d0661a1ff42b3ad9144354230906';
 
 interface SearchResult {
   // Define the structure of your search result object
-  id: string;
-  name: string;
+  value: string;
+  label: string;
   // Add more properties as needed
 }
 
@@ -24,7 +24,7 @@ function App() {
 
   const [Wether, setWether] = useState({})
   const [searchTerm, setSearchTerm] = useState("")
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<any>([]);
 
   // const SubmitePressed = async () => {
   //   console.log('search', search);
@@ -37,18 +37,18 @@ function App() {
   //   })
   // }
 
-  const handelOnchange = async() => {
-    let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=paddhari`;
-    // setwether({ loading: true });
-    let response = await fetch(url);
-    let data = await response.json();
-    console.log('resilts', data);
+  // const handelOnchange = async() => {
+  //   let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}`;
+  //   // setwether({ loading: true });
+  //   let response = await fetch(url);
+  //   let data = await response.json();
+  //   console.log('resilts', data);
 
-    setWether({
-      articles: data.articles,
-   
-    });
-  }
+  //   setWether({
+  //     articles: data.articles,
+
+  //   });
+  // }
 
 
   const modalOpen = () => {
@@ -84,9 +84,20 @@ function App() {
     // For simplicity, let's assume a mock API call that returns search results
     const response = await fetch(`http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${query}`);
     const data = await response.json();
-    setSearchResults(data);
-    // console.log('data',data);
+    // setSearchResults(data);
+    console.log('data', data);
+    
+    if (!data.error ) {
+      if (data.location.name) {
+        let value = { value: data.location.name, label: data.location.name }
+        let results = [...searchResults];
+        results.push(value)
+         console.log('res', results);
+        setSearchResults(results)
+      }
+    }
   };
+  console.log('search',searchResults);
 
   // Wrap the performSearch function with debounce to create a debounced version
   const debouncedSearch = debounce(performSearch, 300);
@@ -199,6 +210,7 @@ function App() {
                               isSearchable={isSearchable}
                               name="value"
                               onInputChange={(val: any) => handleInputChange(val)}
+                              options={searchResults}
                             />
                             <div className="mt-2">
                               <p className="text-sm text-gray-500">Are you sure you want to deactivate your account? All of your data will be permanently removed. This action cannot be undone.</p>
@@ -207,7 +219,7 @@ function App() {
                         </div>
                       </div>
                       <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                        <button type="button" className="bg-[blue] border-1   ==inline-flex w-full justify-center rounded-md  px-3 py-2 text-sm font-semibold text-black shadow-xl  sm:ml-3 sm:w-auto" onClick={handelOnchange}>Submit</button>
+                        {/* <button type="button" className="bg-[blue] border-1   ==inline-flex w-full justify-center rounded-md  px-3 py-2 text-sm font-semibold text-black shadow-xl  sm:ml-3 sm:w-auto">Submit</button> */}
                         <button type="button" className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" onClick={modalClose}>Cancel</button>
                       </div>
                     </div>

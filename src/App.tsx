@@ -16,26 +16,78 @@ interface SearchResult {
   value: string;
   label: string;
   // Add more properties as needed
+  location: {
+    name: string,
+    country: string,
+  }
+  current: {
+    condition: {
+      temp_c: number,
+      wind_kph: number,
+      text : string,
+    }
+
+  }
 }
 
 function App() {
   const [modalVisible, setModalVisible] = useState(false)
   const [Whether, setWhether] = useState({})
-
+  const [weatherData, setWeatherData] = useState(null);
   const [Wether, setWether] = useState({})
   const [searchTerm, setSearchTerm] = useState("")
   const [searchResults, setSearchResults] = useState<any>([]);
+  const [selectedLocation, setSelectedLocation] = useState("")
+  const [CurrentData, setCurrentData] = useState('')
+  const [forcastData, setforcastData] = useState('')
 
-  // const SubmitePressed = async () => {
-  //   console.log('search', search);
-  //   let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=paddhari`;
-  //   let response = await fetch(url);
-  //   let data = await response.json();
-  //   console.log('resilts pagination', data);
-  //   setWether({
-  //     data
-  //   })
-  // }
+  const onSelectChange = (option: any) => {
+    setSelectedLocation(option.value)
+  }
+
+  const formatCurrentData = async(data: any) => {
+    let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${selectedLocation}`;
+    let response = await fetch(url);
+    let db = await response.json();
+    console.log('database',db);
+
+    const name = data.location.name
+    const country = data.location.country
+    const date = data.current.date
+    const temp = data.current.name
+    const condition = data.current.condition.text
+    const icon = data.current.condition.icon
+    const wind = data.current.wind_kph
+    const humidity = data.current.humidity
+    const preciption = data.current.precip_nm
+
+    setCurrentData(data.)
+  }
+
+  const SubmitPressed = async () => {
+    let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${selectedLocation}`;
+    let response = await fetch(url);
+    let data = await response.json();
+    console.log('resilts pagination', data);
+    setWether(
+      data)
+    modalClose()
+  }
+
+  useEffect(() => {
+    // Fetch weather data from the API
+    const fetchWeatherData = async () => {
+      try {
+        const response = await fetch(`http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=paddhari`);
+        const data = await response.json();
+        setWeatherData(data);
+      } catch (error) {
+        console.error('Error fetching weather data:', error);
+      }
+    };
+
+    fetchWeatherData();
+  }, [apiKey]);
 
   // const handelOnchange = async() => {
   //   let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}`;
@@ -52,10 +104,10 @@ function App() {
 
 
   const modalOpen = () => {
-   setModalVisible(true)
+    setModalVisible(true)
   }
 
-  const modalClose = () => { 
+  const modalClose = () => {
     setModalVisible(false)
   }
 
@@ -65,39 +117,26 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRtl, setIsRtl] = useState(false);
 
-  const colourOptions = [
-    { value: 'ocean', label: 'Ocean'},
-    { value: 'blue', label: 'Blue' },
-    { value: 'purple', label: 'Purple' },
-    { value: 'red', label: 'Red'},
-    { value: 'orange', label: 'Orange' },
-    { value: 'yellow', label: 'Yellow' },
-    { value: 'green', label: 'Green' },
-    { value: 'forest', label: 'Forest' },
-    { value: 'slate', label: 'Slate' },
-    { value: 'silver', label: 'Silver' },
-  ];
+
 
   const performSearch = async (query: string) => {
-    // Perform your API request here and update the searchResults state
-    // You can use any HTTP library or fetch to make the request
-    // For simplicity, let's assume a mock API call that returns search results
     const response = await fetch(`http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${query}`);
     const data = await response.json();
     // setSearchResults(data);
     console.log('data', data);
-    
-    if (!data.error ) {
+
+    if (!data.error) {
       if (data.location.name) {
-        let value = { value: data.location.name, label: data.location.name }
-        let results = [...searchResults];
-        results.push(value)
-         console.log('res', results);
-        setSearchResults(results)
+        const value = { value: data.location.name, label: data.location.name };
+        setSearchResults([value]); // Update searchResults with a new array containing only the latest value
+      } else {
+        setSearchResults([]); // Clear searchResults if there are no valid results
       }
+    } else {
+      setSearchResults([]); // Clear searchResults if there is an error
     }
   };
-  console.log('search',searchResults);
+  console.log('search', searchResults);
 
   // Wrap the performSearch function with debounce to create a debounced version
   const debouncedSearch = debounce(performSearch, 300);
@@ -184,7 +223,7 @@ function App() {
               <input type="submit" onClick={modalOpen} className='mt-1 cursor-pointer text-lg text-[#FFFFFF] ' value="Change Location" style={{ fontFamily: 'Montserrat' }} />
             </div>
 
-            {modalVisible && 
+            {modalVisible &&
               <div className="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
                 <div className="fixed inset-0 z-10 overflow-y-auto bg-black bg-opacity-80 backdrop-blur-sm">
                   <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0 bg">
@@ -210,6 +249,7 @@ function App() {
                               isSearchable={isSearchable}
                               name="value"
                               onInputChange={(val: any) => handleInputChange(val)}
+                              onChange={onSelectChange}
                               options={searchResults}
                             />
                             <div className="mt-2">
@@ -219,7 +259,7 @@ function App() {
                         </div>
                       </div>
                       <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                        {/* <button type="button" className="bg-[blue] border-1   ==inline-flex w-full justify-center rounded-md  px-3 py-2 text-sm font-semibold text-black shadow-xl  sm:ml-3 sm:w-auto">Submit</button> */}
+                        <button type="button" className="bg-[blue] border-1   ==inline-flex w-full justify-center rounded-md  px-3 py-2 text-sm font-semibold text-black shadow-xl  sm:ml-3 sm:w-auto" onClick={SubmitPressed}>Submit</button>
                         <button type="button" className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" onClick={modalClose}>Cancel</button>
                       </div>
                     </div>

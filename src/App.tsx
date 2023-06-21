@@ -61,7 +61,17 @@ function App() {
     const humidity = data.current.humidity
     const preciption = data.current.precip_nm
 
-    setCurrentData(data.)
+    return {
+      name,
+      country,
+      condition,
+      date,
+      temp,
+      icon,
+      wind,
+      humidity,
+      preciption
+    }
   }
 
   const SubmitPressed = async () => {

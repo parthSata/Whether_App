@@ -22,18 +22,28 @@ interface SearchResult {
   }
   current: {
     condition: {
+      last_updated: string,
+      icon: string,
       temp_c: number,
       wind_kph: number,
-      text : string,
+      text: string,
     }
-
   }
+  // forcast: {
+  //   current: {
+  //     condition: {
+  //       date: Date,
+  //       temp_c: number,
+  //       icon : string
+  //     }
+  //   }
+  // }
 }
 
 function App() {
   const [modalVisible, setModalVisible] = useState(false)
   const [Whether, setWhether] = useState({})
-  const [weatherData, setWeatherData] = useState(null);
+  const [weatherData, setWeatherData] = useState<SearchResult | null>(null);
   const [Wether, setWether] = useState({})
   const [searchTerm, setSearchTerm] = useState("")
   const [searchResults, setSearchResults] = useState<any>([]);
@@ -46,58 +56,96 @@ function App() {
   }
 
   const formatCurrentData = async(data: any) => {
-    let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${selectedLocation}`;
-    let response = await fetch(url);
-    let db = await response.json();
-    console.log('database',db);
+    if (data && data.location && data.current && data.current.condition) {
+      const name = data.location.name;
+      const country = data.location.country;
+      const date = data.current.date
+      const temp = data.current.temp_c;
+      const condition = data.current.condition.text;
+      const icon = data.current.condition.icon.toString();
+      const wind = data.current.wind_kph;
+      const last_updated = data.current.condition.last_updated
+      const humidity = data.current.humidity;
+      const precipitation = data.current.precip_nm;
 
-    const name = data.location.name
-    const country = data.location.country
-    const date = data.current.date
-    const temp = data.current.name
-    const condition = data.current.condition.text
-    const icon = data.current.condition.icon
-    const wind = data.current.wind_kph
-    const humidity = data.current.humidity
-    const preciption = data.current.precip_nm
-
-    return {
-      name,
-      country,
-      condition,
-      date,
-      temp,
-      icon,
-      wind,
-      humidity,
-      preciption
+      return {
+        name,
+        country,
+        condition,
+        date,
+        last_updated,
+        temp,
+        icon,
+        wind,
+        humidity,
+        precipitation
+      };
     }
   }
 
+  // const formatForcastData = (data: any) => {
+  //   if (data && data.location && data.current && data.current.condition) {
+  //     const icon = data.current.condition.icon.toString();
+  //     const date = data.current.date
+  //     const temp = data.current.temp_c;
+
+  //     return {
+  //       icon,
+  //       date,
+  //       temp
+  //     }
+  //   }
+  // }
+
   const SubmitPressed = async () => {
-    let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${selectedLocation}`;
-    let response = await fetch(url);
-    let data = await response.json();
-    console.log('resilts pagination', data);
-    setWether(
-      data)
-    modalClose()
-  }
+    const url = `http://api.weatherapi.com/v1/forecast.json?key=388d0661a1ff42b3ad9144354230906&q=${selectedLocation}&days=4&aqi=no&alerts=no`
+    const response = await fetch(url);
+    const data = await response.json();
 
-  useEffect(() => {
-    // Fetch weather data from the API
-    const fetchWeatherData = async () => {
-      try {
-        const response = await fetch(`http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=paddhari`);
-        const data = await response.json();
-        setWeatherData(data);
-      } catch (error) {
-        console.error('Error fetching weather data:', error);
-      }
-    };
+  console.log('data',data);
 
-    fetchWeatherData();
-  }, [apiKey]);
+    if (!data.error) {
+      const result: SearchResult = {
+        value: selectedLocation,
+        label: selectedLocation,
+        location: {
+          name: data.location.name,
+          country: data.location.country
+        },
+        current: {
+          condition: {
+            last_updated : data.current.condition.last_updated,
+            icon: data.current.condition.icon,
+            temp_c: data.current.temp_c,
+            wind_kph: data.current.wind_kph,
+            text: data.current.condition.text
+          }
+        },
+        // forcast: {
+         
+        //   date: data.current.date,
+        //   icon: data.current.condition.icon.toString(),
+        //   temp_c: data.current.temp_c
+        //    // Call formatForcastData to format forecast data
+        // }
+       
+      };
+
+      setWeatherData(result);
+    }
+
+    modalClose();
+  };
+
+
+  // const SubmitPressed = async () => {
+  //   let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${selectedLocation}`;
+  //   let response = await fetch(url);
+  //   let data = await response.json();
+  //   console.log('resilts pagination', data);
+  //   setWether(data)
+  //   modalClose()
+  // }
 
   // const handelOnchange = async() => {
   //   let url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}`;
@@ -165,23 +213,25 @@ function App() {
       <div className="h-[56%] w-[43%] flex justify-center bg-[#222831] rounded-2xl">
         <div className='h-full w-full flex items-center lg:flex-row flex-col relative' >
           <img src={rectangleImg} alt="Background" className="h-[106%]" />
+            {weatherData && (
           <div className="absolute text-white h-full p-5 flex flex-col justify-between">
             <div>
               <p className=" font-bold text-2xl" style={{ fontFamily: 'Montserrat' }}>Tuesday</p>
-              <p className=" font-bold text-sm" style={{ fontFamily: 'Montserrat' }}>21 Jun 2022</p>
+                <p className=" font-bold text-sm" style={{ fontFamily: 'Montserrat' }}>{weatherData.current.condition.last_updated}</p>
               <div className='absolute text-white h-full '>
                 <img src={Biarritz} alt='' className='h-3 m-1'></img>
               </div>
-              <p className=" font-bold text-xs pl-4 m-1" style={{ fontFamily: 'Montserrat' }}>Biarritz, FR</p>
+                <p className=" font-bold text-xs pl-4 m-1" style={{ fontFamily: 'Montserrat' }}>{weatherData.location.name}, {weatherData.location.country}</p>
             </div>
-            <div>
+              <div>
               {/* <p className=" font-bold text-2xl" style={{ fontFamily: 'Montserrat' }}></p> */}
-              <img src={Sun} alt='' className='h-16' />
-              <p className=" font-bold text-2xl" style={{ fontFamily: 'Montserrat' }}>06 °C</p>
+              <img src={weatherData.current.condition.icon} alt='' className='h-16' />
+              <p className=" font-bold text-2xl" style={{ fontFamily: 'Montserrat' }}>{weatherData.current.condition.temp_c} °C</p>
 
-              <p className=" font-bold text-xl m-1" style={{ fontFamily: 'Montserrat' }}>Sunny</p>
-            </div>
+              <p className=" font-bold text-xl m-1" style={{ fontFamily: 'Montserrat' }}>{weatherData.current.condition.text}</p>
+              </div>
           </div>
+            )}
 
           <div className='flex flex-col gap-2 mt-3 self-start  p-6'>
             <div className='flex justify-between '>

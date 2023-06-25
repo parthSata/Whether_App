@@ -55,7 +55,7 @@ function App() {
   const [forcastData, setforcastData] = useState<any[]>([])
 
   const onSelectChange = (option: any) => {
-    setSelectedLocation(option.value)
+    setSelectedLocation(option?.value)
   }
 
   const formatCurrentData =  (data: any) => {
